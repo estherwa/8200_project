@@ -4,8 +4,12 @@ WORKDIR /app
 
 COPY Frontend /app
 
-RUN  pip install -r requirements.txt
+RUN  npm install
+
+COPY . .
+
+RUN npm run build
 
 EXPOSE 3000
 
-CMD python3 app.py
+imp
