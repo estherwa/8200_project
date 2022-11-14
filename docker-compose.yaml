@@ -1,35 +1,63 @@
-version: '3.7'
+
+
+version: '3'
 services:
-  app:
-    build: ./Frontend
+
+
+  # Create frontend container
+  frontend: # Name of our service
+    build: ./frontend # path to dockerfile
+    ports: # Port binding to host from docker container
+      - "3000:3000" # Bind port 3000 of host to 3000 of container
+    container_name: frontend-docker
+    restart: always # What to do if container crashes
+    links:
+      - backend
+  # Create backend container
+  backend:
+    # Create backend container
+    build: ./backend
     ports:
-      - 3000:3000
+      - "8080:8080"
+  django:
+    build: .
+  container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - pgdb
+  pgdb:
+      image: pgdb-v2
+  container_name: pgdb
     environment:
-      NODE_ENV: "project"
-      SERVER_URL: "localhost"
-      SERVER_PORT: "3002"
-    links:
-      - server
-  server:
-    build: ./Backend
-    links:
-      - db
-    ports:
-      - 5000:5000
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_DB=${POSTGRES_DB}
+    container_name: backend-docker
+    restart: always
+    links:
+      - db
+  # Create database container
   db:
-    image: mysql:8.0
-    ports:
-      - 3307:3306
-    environment:
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_PORT=${DATABASE_PORT}
-      - BACKEND_PORT=${BACKEND_PORT}
-      - ALLOW_HOSTS=web
 
+      image: mysql:8.0
+      ports:
+        - "5432:5432"
+      environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+#        - POSTGRES_NAME=${POSTGRES_NAME}
+#        - POSTGRES_USER=${POSTGRES_USER}
+#        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#        - DATABASE_HOST=${DATABASE_HOST}
+#        - DATABASE_PORT=${DATABASE_PORT}
+#        - BACKEND_PORT=${BACKEND_PORT}
+#        - ALLOW_HOSTS=web
